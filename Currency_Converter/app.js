@@ -1,26 +1,26 @@
 const BASE_URL =
-  "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies";
-
-
+  "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies";
 
 const dropdowns = document.querySelectorAll(".dropdown select");
+
 const btn = document.querySelector("form button");
+
 const fromCurr = document.querySelector(".from select");
 const toCurr = document.querySelector(".to select");
+
 const msg = document.querySelector(".msg");
-
-
-
 for (let select of dropdowns) {
-  for (currCode in countryList) {
+  for (let currCode in countryList) {
     let newOption = document.createElement("option");
     newOption.innerText = currCode;
     newOption.value = currCode;
+
     if (select.name === "from" && currCode === "USD") {
       newOption.selected = "selected";
     } else if (select.name === "to" && currCode === "INR") {
       newOption.selected = "selected";
     }
+
     select.append(newOption);
   }
 
@@ -29,57 +29,48 @@ for (let select of dropdowns) {
   });
 }
 
-
-
-const updateExchangeRate = async () => {
-  let amount = document.querySelector(".amount input");
-  let amtVal = amount.value;
-  if (amtVal === "" || amtVal < 1) {
-    amtVal = 1;
-    amount.value = "1";
-  }
-  const URL = `${BASE_URL}/${fromCurr.value.toLowerCase()}/${toCurr.value.toLowerCase()}.json`;
-  let response = await fetch(URL);
-  let data = await response.json();
-  let rate = data[toCurr.value.toLowerCase()];
-
-  let finalAmount = amtVal * rate;
-  msg.innerText = `${amtVal} ${fromCurr.value} = ${finalAmount} ${toCurr.value}`;
-};
-
-
-
 const updateFlag = (element) => {
   let currCode = element.value;
   let countryCode = countryList[currCode];
-  let newSrc = `https://flagsapi.com/${countryCode}/flat/64.png`;
   let img = element.parentElement.querySelector("img");
-  img.src = newSrc;
+  img.src = `https://flagsapi.com/${countryCode}/flat/64.png`;
 };
-
 
 btn.addEventListener("click", (evt) => {
   evt.preventDefault();
   updateExchangeRate();
 });
 
+const updateExchangeRate = async () => {
+  try {
+    let amount = document.querySelector(".amount input");
+    let amtVal = amount.value.trim() || "1";
+    if (amtVal < 1) {
+      amtVal = "1";
+      amount.value = "1";
+    }
+
+    const URL = `${BASE_URL}/${fromCurr.value.toLowerCase()}.json`;
+
+    let response = await fetch(URL);
+
+    if (!response.ok) throw new Error("Failed To Fetch Currency Data");
+
+    let data = await response.json();
+
+    if (!data) throw new Error("Invalid Data");
+
+    let rate = data[fromCurr.value.toLowerCase()][toCurr.value.toLowerCase()];
+
+    let finalAmt = amtVal * rate;
+
+    msg.innerText = `${amtVal} ${fromCurr.value} = ${finalAmt} ${toCurr.value}`;
+  } catch (error) {
+    msg.innerText = "Failed To Fetch Data Some Error OCcured";
+    console.log(error);
+  }
+};
 
 window.addEventListener("load", () => {
   updateExchangeRate();
 });
-
-
-/* Steps Followed
-
-step 1)   ---->  Created Two Files  ( codes.js  & app.js ) 
-step 2)   ---->  Added API
-step 3)   ---->  Dropdown Functionality 
-step 4)   ---->  Default Country Name Functionality 
-step 5)   ---->  Default Country Flag And Updated Flag Functionality
-step 6)   ---->  Button Functionality
-step 7)   ---->  Update Exchange Rate Functionality
-step 8)   ---->  Fetch API
-step 9)   ---->  msg
-step 10)  ---->  Default Load                                              */
-
-                                                 
